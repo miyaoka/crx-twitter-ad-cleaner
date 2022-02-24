@@ -1,7 +1,8 @@
 // timeline
 const timelineSelector = 'div[style^="transform"]';
-// Who to follow, Topics to follow, promoted Tweet
-const headingSelector = 'h2[role="heading"]';
+// 'Who to follow', 'Topics to follow', 'Promoted Tweet'
+// not 'More Replies'
+const headingSelector = ':scope > div > h2[role="heading"]';
 // promotion
 const promotionSelector = "div[data-testid=placementTracking]";
 // Show more, More Topics
