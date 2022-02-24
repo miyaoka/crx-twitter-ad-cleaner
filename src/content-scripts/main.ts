@@ -17,8 +17,11 @@ const needClean = () => {
   const { pathname } = location;
   // home, search
   if (timelinePageRegExp.test(pathname)) return true;
-  // replay
-  if (statusPageRegExp.test(pathname)) return true;
+  // status (without photo)
+  if (statusPageRegExp.test(pathname)) {
+    const [, , , , action] = pathname.split("/");
+    return action !== "photo";
+  }
   // profile
   if (document.querySelector(profileBannerSelector)) return true;
   return false;
@@ -32,7 +35,7 @@ const removePromotion = (line: Element) => {
   console.log("remove: promotion");
   removeChildren(line);
 };
-const clean = () => {
+const cleanUp = () => {
   if (!needClean()) {
     return;
   }
@@ -81,12 +84,12 @@ const clean = () => {
 
 new PerformanceObserver(() => {
   console.log("LCP");
-  clean();
+  cleanUp();
 }).observe({
   type: "largest-contentful-paint",
   buffered: true,
 });
 
 document.addEventListener("scroll", () => {
-  clean();
+  cleanUp();
 });
