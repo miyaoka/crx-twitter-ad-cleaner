@@ -1,29 +1,34 @@
 // timeline
 const timelineSelector = 'div[style^="transform"]';
-// 'Who to follow', 'Topics to follow', 'Promoted Tweet'
-// not 'More Replies'
-const headingSelector = ':scope > div > h2[role="heading"]';
+// 'Who to follow', 'Topics to follow', 'Promoted Tweet', 'More Replies'
+const headingSelector = 'h2[role="heading"]';
 // promotion
 const promotionSelector = "div[data-testid=placementTracking]";
 // Show more, More Topics
-const moreSelector = 'a[href^="/i/"]';
+const moreSelector = ':scope > div > a[href^="/i/"]';
 
 const timelinePageRegExp = new RegExp("^/(home|search)");
 const statusPageRegExp = new RegExp("^/[^/]+/status/");
-const profileBannerSelector =
-  'img[src^="https://pbs.twimg.com/profile_banners/"]';
+const profilePageSelector = '[data-testid="UserName"]';
+
+// const testidMAp = $$("[data-testid]").map((el) => el.getAttribute("data-testid")).reduce((acc, cur) => ({ ...acc, [cur]: (acc[cur] || 0) + 1 }), {});
 
 const needClean = () => {
   const { pathname } = location;
   // home, search
-  if (timelinePageRegExp.test(pathname)) return true;
+  if (timelinePageRegExp.test(pathname)) {
+    return true;
+  }
   // status (without photo)
   if (statusPageRegExp.test(pathname)) {
     const [, , , , action] = pathname.split("/");
+
     return action !== "photo";
   }
   // profile
-  if (document.querySelector(profileBannerSelector)) return true;
+  if (document.querySelector(profilePageSelector)) {
+    return true;
+  }
   return false;
 };
 
@@ -31,62 +36,66 @@ const removeChildren = (line: Element) => {
   Array.from(line.children).forEach((el) => el.remove());
 };
 
-const removePromotion = (line: Element) => {
-  console.log("remove: promotion");
-  removeChildren(line);
-};
 const cleanUp = () => {
   if (!needClean()) {
     return;
   }
 
-  let inTopicSection = false;
+  let topicStack: Element[] = [];
+  const revercedTimeline = Array.from(
+    document.querySelectorAll<HTMLElement>(timelineSelector)
+  ).reverse();
 
-  document.querySelectorAll(timelineSelector).forEach((line) => {
+  revercedTimeline.forEach((line) => {
+    // topic footer
+    if (line.querySelector(moreSelector)) {
+      console.log("add stack: topic footer");
+      topicStack.push(line);
+      return;
+    }
+
     const heading = line.querySelector(headingSelector);
     const promotion = line.querySelector(promotionSelector);
 
-    if (heading) {
-      // title with promotion
-      if (promotion) {
-        removePromotion(line);
-        return;
-      }
-      // title only (topic start)
-      inTopicSection = true;
-      console.log("remove: topic title -> " + heading.textContent);
-      removeChildren(line);
-      return;
-    }
-
-    // promotion only
+    // promotion
     if (promotion) {
-      removePromotion(line);
+      console.log("remove: promotion");
+      promotion.remove();
+      heading?.remove();
+      const children = Array.from(line.children) as HTMLElement[];
+      children.forEach((el) => {
+        el.style.display = "none";
+      });
       return;
     }
 
-    // topic end
-    if (line.querySelector(moreSelector)) {
-      console.log("remove: topic footer");
-      removeChildren(line);
-      inTopicSection = false;
+    if (heading) {
+      const len = topicStack.length;
+      // remove topic stack and heading
+      if (len > 0) {
+        console.log(`remove stack (${len}): ${heading.textContent}`);
+        topicStack.forEach((l) => {
+          removeChildren(l);
+        });
+        topicStack = [];
+        removeChildren(line);
+      }
       return;
     }
 
     // in topic
-    if (inTopicSection) {
-      console.log("remove: topic body");
-      removeChildren(line);
+    if (topicStack.length > 0) {
+      console.log("add stack: topic body");
+      topicStack.push(line);
       return;
     }
   });
 };
 
 new PerformanceObserver(() => {
-  console.log("LCP");
   cleanUp();
 }).observe({
-  type: "largest-contentful-paint",
+  type: "longtask",
   buffered: true,
 });
 
