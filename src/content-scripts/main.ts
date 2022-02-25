@@ -3,9 +3,8 @@ const timelineSelector = 'div[style^="transform"]';
 // 'Who to follow', 'Topics to follow', 'Promoted Tweet', 'More Replies'
 const headingSelector = 'h2[role="heading"]';
 // promotion
-const promotionSelector = "div[data-testid=placementTracking]";
-// not promotion
-const userVideoSelector = ':scope > div[data-testid="videoPlayer"]';
+const promotionSelector =
+  "div[data-testid=placementTracking] > :not(div[data-testid=videoPlayer])";
 // Show more, More Topics
 const moreSelector = ':scope > div > a[href^="/i/"]';
 
@@ -60,9 +59,9 @@ const cleanUp = () => {
     const promotion = line.querySelector(promotionSelector);
 
     // promotion
-    if (promotion && !promotion.querySelector(userVideoSelector)) {
+    if (promotion) {
       console.log("remove: promotion");
-      promotion.remove();
+      promotion.parentElement?.remove();
       heading?.remove();
       const children = Array.from(line.children) as HTMLElement[];
       children.forEach((el) => {
