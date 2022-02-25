@@ -4,6 +4,8 @@ const timelineSelector = 'div[style^="transform"]';
 const headingSelector = 'h2[role="heading"]';
 // promotion
 const promotionSelector = "div[data-testid=placementTracking]";
+// not promotion
+const userVideoSelector = ':scope > div[data-testid="videoPlayer"]';
 // Show more, More Topics
 const moreSelector = ':scope > div > a[href^="/i/"]';
 
@@ -58,7 +60,7 @@ const cleanUp = () => {
     const promotion = line.querySelector(promotionSelector);
 
     // promotion
-    if (promotion) {
+    if (promotion && !promotion.querySelector(userVideoSelector)) {
       console.log("remove: promotion");
       promotion.remove();
       heading?.remove();
