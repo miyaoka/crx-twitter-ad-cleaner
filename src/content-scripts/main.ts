@@ -2,9 +2,11 @@
 const timelineSelector = 'div[style^="transform"]';
 // 'Who to follow', 'Topics to follow', 'Promoted Tweet', 'More Replies'
 const headingSelector = 'h2[role="heading"]';
-// promotion
-const promotionSelector =
-  "div[data-testid=placementTracking] > :not(div[data-testid=videoPlayer])";
+// tracking
+// promotion, 動画、spacesに使われる
+const trackingSelector = "div[data-testid=placementTracking]";
+// tracking内にtweetがあればpromotion
+const tweetSelector = "[data-testid=tweet]";
 // Show more, More Topics
 const moreSelector = ':scope > div > a[href^="/i/"]';
 
@@ -56,12 +58,12 @@ const cleanUp = () => {
     }
 
     const heading = line.querySelector(headingSelector);
-    const promotion = line.querySelector(promotionSelector);
+    const tracking = line.querySelector(trackingSelector);
 
-    // promotion
-    if (promotion) {
+    // track > tweetであればpromotion
+    if (tracking && tracking.querySelector(tweetSelector)) {
       console.log("remove: promotion");
-      promotion.parentElement?.remove();
+      tracking.parentElement?.remove();
       heading?.remove();
       const children = Array.from(line.children) as HTMLElement[];
       children.forEach((el) => {
